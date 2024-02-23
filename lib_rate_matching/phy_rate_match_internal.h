@@ -24,13 +24,8 @@
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
-#ifndef MAX_VALUE
-#define MAX_VALUE (16)
-#endif
-
-#ifndef MIN_VALUE
-#define MIN_VALUE (-16)
-#endif
+#define DEC_IN_MAX_VALUE (8)
+#define DEC_IN_MIN_VALUE (-8)
 
 /* It is derived from TS 36.212 5.1.2 */
 #define MAX_CODE_BLOCK_IN_ONE_TB (25)

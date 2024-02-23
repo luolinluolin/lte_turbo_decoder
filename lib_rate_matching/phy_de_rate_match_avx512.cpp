@@ -47,11 +47,11 @@ __m512i idx3ForFlag0 =_mm512_set_epi64(0xF, 0xE, 0x7, 0x6, 0xD, 0xC, 0x5, 0x4);
 __m512i idx2ForFlag1 =_mm512_set_epi64(0xD, 0xC, 0x5, 0x4, 0x9, 0x8, 0x1, 0x0);
 __m512i idx3ForFlag1 =_mm512_set_epi64(0xF, 0xE, 0x7, 0x6, 0xB, 0xA, 0x3, 0x2);
 
-__m512i VMAX_512 = _mm512_set1_epi8(16);
-__m512i VMIN_512 = _mm512_set1_epi8(-16);
+__m512i VMAX_512 = _mm512_set1_epi8(DEC_IN_MAX_VALUE);
+__m512i VMIN_512 = _mm512_set1_epi8(DEC_IN_MIN_VALUE);
 
-__m128i VMAX_128 = _mm_set1_epi8(16);
-__m128i VMIN_128 = _mm_set1_epi8(-16);
+__m128i VMAX_128 = _mm_set1_epi8(DEC_IN_MAX_VALUE);
+__m128i VMIN_128 = _mm_set1_epi8(DEC_IN_MIN_VALUE);
 
 #define UNPACKEPI8_AVX512(in0,in1,out0,out1)\
 {\
@@ -102,10 +102,10 @@ static void addByteWithNum_avx512(uint8_t *pIn, uint8_t *pOut, int32_t Len)
     for(int32_t i=0; i<Len; i++)
     {
         value = *pOut + *pIn;
-        if(value>MAX_VALUE)
-            value=MAX_VALUE;
-        if(value<MIN_VALUE)
-            value=MIN_VALUE;
+        if(value>DEC_IN_MAX_VALUE)
+            value=DEC_IN_MAX_VALUE;
+        if(value<DEC_IN_MIN_VALUE)
+            value=DEC_IN_MIN_VALUE;
 
         *pOut = value;
         pIn++;

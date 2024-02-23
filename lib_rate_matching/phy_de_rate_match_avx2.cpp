@@ -44,8 +44,8 @@ void addByteWithNum(uint8_t **pIn, uint8_t *pOut, int32_t Len)
     for(int32_t i=0; i<Len; i++)
     {
         value = *pOut + **pIn;
-        if(value>MAX_VALUE)value=MAX_VALUE;
-        if(value<MIN_VALUE)value=MIN_VALUE;
+        if(value>DEC_IN_MAX_VALUE)value=DEC_IN_MAX_VALUE;
+        if(value<DEC_IN_MIN_VALUE)value=DEC_IN_MIN_VALUE;
         *pOut = value;
         *pIn = *pIn + 1;
         pOut++;
@@ -57,8 +57,8 @@ void wrapAdd2HarqBuffer(uint8_t **pIn, uint8_t *pOut, int32_t len)
     __m256i ymm0,ymm1;
     len0 = len&0xffffffe0;
     len1 = len&0x1f;
-    __m256i VMAX = _mm256_set1_epi8(MAX_VALUE);
-        __m256i VMIN = _mm256_set1_epi8(MIN_VALUE);
+    __m256i VMAX = _mm256_set1_epi8(DEC_IN_MAX_VALUE);
+        __m256i VMIN = _mm256_set1_epi8(DEC_IN_MIN_VALUE);
     for(int32_t i=0; i<len0; i=i+32)
     {
         ymm0 = _mm256_loadu_si256 ((__m256i const *) *pIn);
