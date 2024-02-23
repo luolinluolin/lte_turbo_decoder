@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "gdb",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/local/MATLAB/R2021a/bin/glnxa64/MATLAB",
+            // "program": "/usr/local/MATLAB/R2021a/bin/matlab",
+            "args": ["-nosplash", "-nodesktop", "-r", "\"run('/home/luolin/networking.wireless.cellular-standards.lls.oran/config/setup.m'); run('/home/luolin/networking.wireless.cellular-standards.lls.oran/TestTurboWinDebug.m');\""],
+            // "args": ["-nosplash", "-nodesktop", "-r", "\"run('/home/luolin/networking.wireless.cellular-standards.lls.oran/config/setup.m'); run('/home/luolin/networking.wireless.cellular-standards.lls.oran/TestTurbo_win_debug.m');\""],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.vscode/vs_env.sh",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "text": "handle SIGSEGV nostop"
+                },
+                {
+                     "text": "handle SIGSEGV noprint"
+                }
+            ]
+        }
+    ]
+}
