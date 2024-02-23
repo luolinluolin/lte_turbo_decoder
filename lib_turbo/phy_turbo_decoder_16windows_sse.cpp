@@ -22,7 +22,8 @@
 
 #if defined(_BBLIB_SSE4_2_) || defined(_BBLIB_AVX2_) || defined(_BBLIB_AVX512_)
 static __m128i TD_constant128 = _mm_setr_epi8(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-static __m128i TD_constantminus80 = _mm_setr_epi8(-80,-80,-80,-80,-80,-80,-80,-80,-80,-80,-80,-80,-80,-80,-80,-80);
+static __m128i TD_constantminus80 = _mm_set1_epi8(-80);
+// static __m128i TD_constantminus80 = _mm_set1_epi8(0);
 static __m128i TD_constant0 = _mm_setr_epi8(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 static __m128i TD_constant_0_16 = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
 static __m128i TD_vshuf1_BitTranspose_16windows = _mm_setr_epi8(14, 12, 10, 8, 6, 4, 2, 0, 15, 13, 11, 9, 7, 5, 3, 1);
@@ -39,6 +40,8 @@ int32_t SISO2_16windows(int8_t *OutputAddress, int8_t *InputAddress,
                                 uint16_t *pCodeBlockBits);
 
 void BitTranspose_16windows(int32_t K, uint16_t * pin, uint8_t * pout);
+
+void init_beta(int8_t *InputAddress, __m128i* initbeta);
 
 struct init_turbo_decoder_16windows_sse
 {
@@ -79,6 +82,20 @@ bblib_lte_turbo_decoder_16windows_sse(const struct bblib_turbo_decoder_request *
 
     /*  tail bit and init alpha, beta */
     int32_t i, j;
+
+    // __m128i initalpha[8], initbeta[8], initalpha_2[8], initbeta_2[8];
+    // for (i = 0; i < 8; i++)
+    // {
+    //     initalpha[i] = _mm_set1_epi8(-128);
+    //     initbeta[i] = _mm_set1_epi8(-128);
+    //     initalpha_2[i] = _mm_set1_epi8(-128);
+    //     initbeta_2[i] = _mm_set1_epi8(-128);
+    // }
+    // initalpha[0] = _mm_insert_epi8(initalpha[0], 0, 0);
+    // initbeta[0] = _mm_insert_epi8(initbeta[0], 0, 0);
+    // initalpha_2[0] = _mm_insert_epi8(initalpha_2[0], 0, 0);
+    // initbeta_2[0] = _mm_insert_epi8(initbeta_2[0], 0, 0);
+
     __m128i initalpha[8], initbeta[8], initalpha_2[8], initbeta_2[8];
     for (i=1;i<8;i++)
     {
@@ -125,14 +142,7 @@ bblib_lte_turbo_decoder_16windows_sse(const struct bblib_turbo_decoder_request *
     tailbeta[2] = r2 + tailbeta[1];
     tailbeta[1] = r3;
 
-    r1 = zaptk2; r2 = xaptk2; r3 = r1 + r2;
-    tailbeta_2[7] = tailbeta_2[3];
-    tailbeta_2[6] = r3 + tailbeta_2[3];
-    tailbeta_2[5] = r2 + tailbeta_2[2];
-    tailbeta_2[4] = r1 + tailbeta_2[2];
-    tailbeta_2[3] = r1 + tailbeta_2[1];
-    tailbeta_2[2] = r2 + tailbeta_2[1];
-    tailbeta_2[1] = r3;
+    init_beta(request->input + 48, initbeta);
 
     initbeta[1] = _mm_insert_epi8(initbeta[1] , tailbeta[1], 15) ;
     initbeta[2] = _mm_insert_epi8(initbeta[2] , tailbeta[2], 15) ;
@@ -142,13 +152,6 @@ bblib_lte_turbo_decoder_16windows_sse(const struct bblib_turbo_decoder_request *
     initbeta[6] = _mm_insert_epi8(initbeta[6] , tailbeta[6], 15) ;
     initbeta[7] = _mm_insert_epi8(initbeta[7] , tailbeta[7], 15) ;
 
-    initbeta_2[1] = _mm_insert_epi8(initbeta_2[1] , tailbeta_2[1], 15) ;
-    initbeta_2[2] = _mm_insert_epi8(initbeta_2[2] , tailbeta_2[2], 15) ;
-    initbeta_2[3] = _mm_insert_epi8(initbeta_2[3] , tailbeta_2[3], 15) ;
-    initbeta_2[4] = _mm_insert_epi8(initbeta_2[4] , tailbeta_2[4], 15) ;
-    initbeta_2[5] = _mm_insert_epi8(initbeta_2[5] , tailbeta_2[5], 15) ;
-    initbeta_2[6] = _mm_insert_epi8(initbeta_2[6] , tailbeta_2[6], 15) ;
-    initbeta_2[7] = _mm_insert_epi8(initbeta_2[7] , tailbeta_2[7], 15) ;
 
     /* Preparing for iteration */
     int8_t* pLeXP1; /* extrinsic information, LLR for systematic bits, LLR for parity bits ==> RSC1 */
@@ -236,6 +239,25 @@ bblib_lte_turbo_decoder_16windows_sse(const struct bblib_turbo_decoder_request *
     _mm_store_si128((__m128i *)(pSysLLR2+out_line_addr), vtmp);
     pSysLLR1 += 48;
     }
+
+    r1 = zaptk2; r2 = xaptk2; r3 = r1 + r2;
+    tailbeta_2[7] = tailbeta_2[3];
+    tailbeta_2[6] = r3 + tailbeta_2[3];
+    tailbeta_2[5] = r2 + tailbeta_2[2];
+    tailbeta_2[4] = r1 + tailbeta_2[2];
+    tailbeta_2[3] = r1 + tailbeta_2[1];
+    tailbeta_2[2] = r2 + tailbeta_2[1];
+    tailbeta_2[1] = r3;
+
+    init_beta(request->input + 48 * (Lwin+1), initbeta_2);
+
+    initbeta_2[1] = _mm_insert_epi8(initbeta_2[1] , tailbeta_2[1], 15) ;
+    initbeta_2[2] = _mm_insert_epi8(initbeta_2[2] , tailbeta_2[2], 15) ;
+    initbeta_2[3] = _mm_insert_epi8(initbeta_2[3] , tailbeta_2[3], 15) ;
+    initbeta_2[4] = _mm_insert_epi8(initbeta_2[4] , tailbeta_2[4], 15) ;
+    initbeta_2[5] = _mm_insert_epi8(initbeta_2[5] , tailbeta_2[5], 15) ;
+    initbeta_2[6] = _mm_insert_epi8(initbeta_2[6] , tailbeta_2[6], 15) ;
+    initbeta_2[7] = _mm_insert_epi8(initbeta_2[7] , tailbeta_2[7], 15) ;
 
     /* or (j=0; j<NUM_MAX_TURBO_ITER; j++) */
     for (j=0; j<numMaxIter; j++) /* change to support configurable max iteration time */
@@ -503,6 +525,120 @@ bblib_lte_turbo_decoder_16windows_3iteration_sse(const struct bblib_turbo_decode
     return NumIter;
 }
 
+void init_beta(int8_t *InputAddress, __m128i* initbeta) {
+
+    __m128i /*initbeta0,*/ initbeta1,initbeta2,initbeta3,initbeta4,initbeta5,initbeta6,initbeta7;
+    __m128i sigma1, sigma2, sigma3;
+
+    __m128i alpha_beta0, alpha_beta1, alpha_beta2, alpha_beta3, alpha_beta4, alpha_beta5, alpha_beta6, alpha_beta7;
+
+    __m128i sigmamask_hi = _mm_set1_epi16((int16_t)0xFF00);
+    __m128i sigmamask_lo = _mm_set1_epi16((int16_t)0x00FF);
+
+    initbeta1 =  initbeta[1];
+    initbeta2 =  initbeta[2];
+    initbeta3 =  initbeta[3];
+    initbeta4 =  initbeta[4];
+    initbeta5 =  initbeta[5];
+    initbeta6 =  initbeta[6];
+    initbeta7 =  initbeta[7];
+
+    auto input_addr = (__m128i *)(InputAddress) + 3 * 0;
+    sigma1 = _mm_load_si128((__m128i const*)(input_addr));
+    input_addr = input_addr + 1;
+
+    /* E*0.75 */
+    alpha_beta2 = _mm_abs_epi8(sigma1);
+    alpha_beta4 = _mm_slli_si128(alpha_beta2,1); /* shift left 1 byte */
+    alpha_beta4 = _mm_srai_epi16(alpha_beta4,2); /* * 1/4 */
+    alpha_beta0 = _mm_srai_epi16(alpha_beta2 ,2); /* * 1/4 */
+    alpha_beta0 = _mm_and_si128(alpha_beta0, sigmamask_hi); /* 1/4 A */
+    alpha_beta4 = _mm_srli_si128(alpha_beta4, 1);
+    alpha_beta4 = _mm_and_si128(alpha_beta4, sigmamask_lo); /* 1/4 A */
+    alpha_beta0 = _mm_adds_epi8(alpha_beta0,alpha_beta4);  /* 0.75 * (A B) */
+
+    alpha_beta2 = _mm_subs_epi8(alpha_beta2 , alpha_beta0);/* 0.75*E obtaned */
+    sigma1 = _mm_sign_epi8(alpha_beta2, sigma1);
+
+    sigma2 = _mm_load_si128((__m128i const*)(input_addr)); /* Xs */
+    input_addr = input_addr + 1;
+    alpha_beta0 = _mm_load_si128((__m128i const*)(input_addr)); /* Xp = r1 */
+
+    /*sigma0 = 0 = r0 */
+    sigma2 = _mm_adds_epi8( sigma2, sigma1);  /* E + Xs  = r2 */
+    sigma3 = _mm_adds_epi8( alpha_beta0, sigma2); /* E+Xs+Xp  = r3 */
+
+    // alpha_beta1 = _mm_adds_epi8( sigma1, sigma0);  /*  E + Xs - 80  = r1 */
+    // alpha_beta2 = _mm_adds_epi8( sigma2, sigma0); /*  Xp - 80      = r2 */
+    // alpha_beta3 = _mm_adds_epi8( sigma3, sigma0); /*  E+Xs+Xp - 80      = r3 */
+    sigma1 = alpha_beta0;
+
+    sigma1 = _mm_adds_epi8(sigma1, TD_constantminus80);
+    sigma2 = _mm_adds_epi8(sigma2, TD_constantminus80);
+    sigma3 = _mm_adds_epi8(sigma3, TD_constantminus80);
+
+    /******** update beta ********/
+    /* Beta(1) = maxstar(r0 + initBeta(1), r3 + initBeta(5) ); */
+    alpha_beta0 = _mm_adds_epi8(sigma3, initbeta4);
+    alpha_beta0 = _mm_max_epi8(alpha_beta0,TD_constantminus80  ); /* beta(1) saved in alpha_beta0; */
+
+
+    /* Beta(2) = maxstar(r3 + initBeta(1), r0 + initBeta(5) ); */
+    alpha_beta1 = _mm_adds_epi8(TD_constantminus80, initbeta4);
+    alpha_beta1 = _mm_max_epi8(alpha_beta1 , sigma3); /* beta(2) saved in alpha_beta1; */
+    alpha_beta1 = _mm_subs_epi8(alpha_beta1,alpha_beta0);
+
+    /* Beta(3) = maxstar(r2 + initBeta(2), r1 + initBeta(6) ); */
+    alpha_beta2 = _mm_adds_epi8(sigma1, initbeta5);
+    alpha_beta3 = _mm_adds_epi8(sigma2, initbeta1);
+    alpha_beta2 = _mm_max_epi8(alpha_beta2, alpha_beta3);  /* beta(3) saved in alpha_beta2 */
+    alpha_beta2 = _mm_subs_epi8(alpha_beta2,alpha_beta0);
+
+    // initbeta1 = alpha_beta1; /* release alpha_beta1; */
+
+    /* Beta(4) = maxstar(r1 + initBeta(2), r2 + initBeta(6) ); */
+    alpha_beta4 = _mm_adds_epi8(sigma2, initbeta5);
+    alpha_beta3 = _mm_adds_epi8(sigma1, initbeta1);
+    alpha_beta7 = _mm_max_epi8(alpha_beta4,alpha_beta3);  /* beta(4) saved in alpha_beta7 */
+    alpha_beta7 = _mm_subs_epi8(alpha_beta7,alpha_beta0);
+
+
+    /* Beta(5) = maxstar(r1 + initBeta(3), r2 + initBeta(7) ); */
+    alpha_beta3 = _mm_adds_epi8(sigma2, initbeta6);
+    alpha_beta4 = _mm_adds_epi8(sigma1, initbeta2);
+    initbeta4   = _mm_max_epi8(alpha_beta4,alpha_beta3);
+    initbeta4 = _mm_subs_epi8(initbeta4,alpha_beta0);
+
+    /* Beta(6) = maxstar(r2 + initBeta(3), r1 + initBeta(7) ); */
+    alpha_beta3 = _mm_adds_epi8(sigma1, initbeta6);
+    alpha_beta4 = _mm_adds_epi8(sigma2, initbeta2);
+    initbeta5   = _mm_max_epi8(alpha_beta3,alpha_beta4);
+    initbeta5 = _mm_subs_epi8(initbeta5,alpha_beta0);
+
+    /* Beta(7) = maxstar(r3 + initBeta(4), r0 + initBeta(8) ); */
+    alpha_beta3 = _mm_adds_epi8(TD_constantminus80, initbeta7);
+    alpha_beta4 = _mm_adds_epi8(sigma3, initbeta3);
+    initbeta6   = _mm_max_epi8(alpha_beta3,alpha_beta4);
+    initbeta6 = _mm_subs_epi8(initbeta6,alpha_beta0);
+    /* Beta(8) = maxstar(r0 + initBeta(4), r3 + initBeta(8) );*/
+    alpha_beta3 = _mm_adds_epi8(sigma3, initbeta7);
+    alpha_beta4 = _mm_adds_epi8(TD_constantminus80, initbeta3);
+    initbeta7   = _mm_max_epi8(alpha_beta3,alpha_beta4);
+    initbeta7 = _mm_subs_epi8(initbeta7,alpha_beta0);
+
+    initbeta1 = alpha_beta1;
+    initbeta2 = alpha_beta2;
+    initbeta3 =  alpha_beta7;
+
+    initbeta[1] =_mm_srli_si128(initbeta1, 1);
+    initbeta[2] =_mm_srli_si128(initbeta2, 1);
+    initbeta[3] =_mm_srli_si128(initbeta3, 1);
+    initbeta[4] =_mm_srli_si128(initbeta4, 1);
+    initbeta[5] =_mm_srli_si128(initbeta5, 1);
+    initbeta[6] =_mm_srli_si128(initbeta6, 1);
+    initbeta[7] =_mm_srli_si128(initbeta7, 1);
+}
+
 
 
 int32_t SISO1_16windows(int8_t *OutputAddress, int8_t *InputAddress,
@@ -595,6 +731,15 @@ int32_t SISO1_16windows(int8_t *OutputAddress, int8_t *InputAddress,
         _mm_store_si128((__m128i *)(output_addr), initalpha6); /* save alpha(K-1) */
         output_addr = output_addr + 1;
         _mm_store_si128((__m128i *)(output_addr), initalpha7); /* save alpha(K-1) */
+
+        print_debug("------- alpha %d --------\n", i);
+        ymm_print(initalpha1);
+        ymm_print(initalpha2);
+        ymm_print(initalpha3);
+        ymm_print(initalpha4);
+        ymm_print(initalpha5);
+        ymm_print(initalpha6);
+        ymm_print(initalpha7);
 
         /* Alpha(2) = maxstar(r2 + initAlpha(3), r1 + initAlpha(4) ); */
         alpha_beta2 = _mm_adds_epi8(sigma1, initalpha3);
@@ -806,7 +951,16 @@ int32_t SISO1_16windows(int8_t *OutputAddress, int8_t *InputAddress,
         /* E = 0.75*(Lamda - Xs - E;) */
         alpha_beta4 = _mm_subs_epi8(sigma2, TD_constantminus80);
         alpha_beta3 = _mm_subs_epi8(alpha_beta2,alpha_beta4);
+        print_debug("------- beta %d --------\n", i);
+        ymm_print(initbeta1);
+        ymm_print(initbeta2);
+        ymm_print(initbeta3);
+        ymm_print(initbeta4);
+        ymm_print(initbeta5);
+        ymm_print(initbeta6);
+        ymm_print(initbeta7);
 
+        print_debug("------- e %d--------\n", i);
         ymm_print(alpha_beta3);
 
         /*  save E, that's in alpha_beta3 */

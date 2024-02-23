@@ -84,8 +84,6 @@ ret:
     return res;
 }
 
-#define DUMP_DATA
-
 #ifdef DUMP_DATA
 char fileStoreBuffer[100];
 

@@ -17,4 +17,14 @@ void byte_print(int32_t ite, int16_t *pData, char *pFile, int32_t nLen);
 void byte_print(int32_t ite, int8_t *pData, char *pFile, int32_t nLen);
 void byte_print_multi_win(int32_t ite, int8_t *pData, char *pFile, int32_t nLen);
 void ymm_print(__m128i data);
+
+
+// #define DUMP_DATA
+
+#ifdef DUMP_DATA
+#define print_debug(fmt, args...) printf("%s:" fmt, __FUNCTION__, ## args)
+#else  /* PRINTF_INFO_DEBUG_LOG_OK */
+#define print_debug(fmt, args...)
+#endif  /* PRINTF_INFO_DEBUG_LOG_OK */
+
 #endif
