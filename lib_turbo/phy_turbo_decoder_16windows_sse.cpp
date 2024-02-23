@@ -142,7 +142,7 @@ bblib_lte_turbo_decoder_16windows_sse(const struct bblib_turbo_decoder_request *
     tailbeta[2] = r2 + tailbeta[1];
     tailbeta[1] = r3;
 
-    init_beta(request->input + 48, initbeta);
+    // init_beta(request->input + 48, initbeta);
 
     initbeta[1] = _mm_insert_epi8(initbeta[1] , tailbeta[1], 15) ;
     initbeta[2] = _mm_insert_epi8(initbeta[2] , tailbeta[2], 15) ;
@@ -249,7 +249,7 @@ bblib_lte_turbo_decoder_16windows_sse(const struct bblib_turbo_decoder_request *
     tailbeta_2[2] = r2 + tailbeta_2[1];
     tailbeta_2[1] = r3;
 
-    init_beta(request->input + 48 * (Lwin+1), initbeta_2);
+    // init_beta(request->input + 48 * (Lwin+1), initbeta_2);
 
     initbeta_2[1] = _mm_insert_epi8(initbeta_2[1] , tailbeta_2[1], 15) ;
     initbeta_2[2] = _mm_insert_epi8(initbeta_2[2] , tailbeta_2[2], 15) ;

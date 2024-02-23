@@ -5,7 +5,7 @@ CXX = icpx
 
 IPPLIB = /opt/intel/oneapi/ipp/latest/lib/intel64
 
-CFLAGS = -g -fPIC -O0 
+CFLAGS = -g -fPIC -O3 
 CFLAGS += -xcore-avx512
 CFLAGS += -D_BBLIB_AVX512_ -D_BBLIB_SSE4_2_
 CFLAGS += -Wwritable-strings

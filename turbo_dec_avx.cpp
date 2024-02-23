@@ -29,7 +29,7 @@
 #define MAX_WIN_NUM 4
 #define ALIGN_SIZE  512
 #define _aligned_malloc(x,y) memalign(y,x)
-#define __align(x) __attribute__((aligned(x)))
+//#define __align(x) __attribute__((aligned(x)))
 
 
 typedef unsigned char UWORD8;
@@ -88,6 +88,26 @@ static void set_neg1(double *pOut, int len)
     }
 }
 
+static int get_k_idx(int K)
+{
+    if(K <= 512)
+    {
+        return K / 8 - 4;
+    }
+    else if(K <= 1024)
+    {
+        return (K - 528) / 16 + 61;
+    }
+    else if(K <= 2048)
+    {
+        return (K - 1056) / 32 + 93;
+    }
+    else
+    {
+        return (K - 2112) / 64 + 125;
+    }
+}
+
 static int turbo_decoder_core(int K, int nIterNum, UWORD8 *pDataIn, double *pDataOut, double *pCrc, int nWinIdx)
 {
     struct bblib_turbo_adapter_ul_request adapter_request;
@@ -105,7 +125,7 @@ static int turbo_decoder_core(int K, int nIterNum, UWORD8 *pDataIn, double *pDat
     /* 10. decoder */
     dec_request.c = 1;
     dec_request.k = K;
-    dec_request.k_idx = K/8-4;
+    dec_request.k_idx = get_k_idx(K);
     dec_request.max_iter_num = nIterNum;
     dec_request.early_term_disable = 0;
     dec_request.input = (int8_t*)adapter_response.pharqout;
