@@ -24,7 +24,8 @@
 #if defined(_BBLIB_SSE4_2_) || defined(_BBLIB_AVX2_) || defined(_BBLIB_AVX512_)
 #define INF 32768
 
-#define TURBR_INIT_OFFSET_SSE -16284
+// #define TURBR_INIT_OFFSET_SSE -16284
+#define TURBR_INIT_OFFSET_SSE 0
 #define TURBO_OFFSET_SSE -8
 
 static const int32_t table_interleaver[188][3] = {
@@ -70,9 +71,9 @@ static const __m128i LastState1 = _mm_setr_epi8(2,3, 4,5, 10,11, 12,13, 0,1, 6,7
     out1 = _mm_adds_epi16(par1, sys); \
     out1 = _mm_adds_epi16(out1, ext); \
     out1 = _mm_srai_epi16(out1, 1); \
-    out0 = _mm_adds_epi16 (out0, _mm_set1_epi16(TURBO_OFFSET_SSE));\
-    out1 = _mm_adds_epi16 (out1, _mm_set1_epi16(TURBO_OFFSET_SSE));\
 }
+    // out0 = _mm_adds_epi16 (out0, _mm_set1_epi16(TURBO_OFFSET_SSE));\
+    // out1 = _mm_adds_epi16 (out1, _mm_set1_epi16(TURBO_OFFSET_SSE));\
 
 #define Calculate_LLR(ag_addr, betaIn, betaOut, llrOut0, llrOut1) \
 { \
